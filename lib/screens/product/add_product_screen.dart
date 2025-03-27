@@ -271,7 +271,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
           ),
           child: TextFormField(
             controller: controller,
-            keyboardType: TextInputType.multiline,
+            keyboardType: isDescription ? TextInputType.multiline : keyboardType,
             textInputAction: TextInputAction.newline,
             minLines: minLines,
             maxLines: maxLines,

@@ -26,7 +26,18 @@ class ProductRepository extends GetxController {
   // Xóa sản phẩm theo ID
   Future<void> deleteProduct(String id) async {
     try {
+      QuerySnapshot variantSnapshot =
+          await _db
+              .collection("products")
+              .where("parentId", isEqualTo: id)
+              .get();
+
+      for (var doc in variantSnapshot.docs) {
+        await _db.collection("products").doc(doc.id).delete();
+      }
+
       await _db.collection("products").doc(id).delete();
+      
       Get.snackbar(
         "Xóa thành công",
         "Sản phẩm đã được xóa",
@@ -41,7 +52,27 @@ class ProductRepository extends GetxController {
   // Sửa sản phẩm theo ID
   Future<void> updateProduct(ProductModel product) async {
     try {
-      await _db.collection("products").doc(product.id).update(product.toJson());
+      DocumentSnapshot docSnapshot =
+          await _db.collection("products").doc(product.id).get();
+
+      if (!docSnapshot.exists) {
+        Get.snackbar(
+          "Lỗi",
+          "Sản phẩm không tồn tại!",
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      Map<String, dynamic> oldData = docSnapshot.data() as Map<String, dynamic>;
+      Map<String, dynamic> updatedData = product.toJson();
+      
+      if (updatedData["parentId"] == null && oldData.containsKey("parentId")) {
+        updatedData["parentId"] = oldData["parentId"];
+      }
+
+      await _db.collection("products").doc(product.id).update(updatedData);
       Get.snackbar(
         "Cập nhật thành công",
         "Sản phẩm đã được cập nhật",

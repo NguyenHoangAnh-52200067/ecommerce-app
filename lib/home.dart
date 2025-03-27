@@ -1,6 +1,5 @@
 import 'package:ecomerce_app/screens/dashboard/dashboard_screen.dart';
 import 'package:ecomerce_app/screens/setting/setting_screen.dart';
-import 'package:ecomerce_app/screens/user/user_profile_screen.dart';
 import 'package:ecomerce_app/screens/widgets/appbar/custom_bottombar.dart';
 import 'package:flutter/material.dart';
 
@@ -15,7 +14,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   final List<Widget> _pages = [
     const DashboardScreen(),
-    const UserProfileScreen(),
+    const SettingScreen(),
   ];
 
   void _onTabChange(int index) {
