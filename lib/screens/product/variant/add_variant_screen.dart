@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:ecomerce_app/models/product_model.dart';
 import 'package:ecomerce_app/repository/product_repository.dart';
+import 'package:ecomerce_app/utils/image_upload.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -17,12 +18,15 @@ class AddVariantScreen extends StatefulWidget {
 class _AddVariantScreenState extends State<AddVariantScreen> {
   final _formKey = GlobalKey<FormState>();
   final ProductRepository _productRepo = ProductRepository();
-
+  final ImageUploadService _imageUploadService =
+      ImageUploadService.getInstance();
   late TextEditingController _nameController;
   late TextEditingController _priceController;
   late TextEditingController _stockController;
 
   List<File> _selectedImages = [];
+  List<String> _images = [];
+  List<String> _imageList = [];
 
   @override
   void initState() {
@@ -45,8 +49,15 @@ class _AddVariantScreenState extends State<AddVariantScreen> {
     if (pickedFiles != null && pickedFiles.isNotEmpty) {
       List<File> newImages =
           pickedFiles.map((pickedFile) => File(pickedFile.path)).toList();
+
+      for (var image in newImages) {
+        String? uploadedUrl = await _imageUploadService.uploadImage(image);
+        print("Uploaded URL: $uploadedUrl");
+        _imageList.add(uploadedUrl);
+      }
       setState(() {
         _selectedImages.addAll(newImages);
+        _images = _imageList;
       });
     }
   }
@@ -91,7 +102,7 @@ class _AddVariantScreenState extends State<AddVariantScreen> {
         brand: widget.parentProduct.brand,
         categoryId: widget.parentProduct.categoryId,
         stock: int.parse(_stockController.text.trim()),
-        images: _selectedImages.map((file) => file.path).toList(),
+        images: _images,
       );
 
       await _productRepo.addVariant(widget.parentProduct, newVariant);
@@ -140,10 +151,13 @@ class _AddVariantScreenState extends State<AddVariantScreen> {
                     backgroundColor: const Color(0xFF7AE582),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                  child: const Text("Lưu biến thể",
-                      style: TextStyle(fontSize: 16, color: Colors.white)),
+                  child: const Text(
+                    "Lưu biến thể",
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
                 ),
               ),
             ],
@@ -172,9 +186,13 @@ class _AddVariantScreenState extends State<AddVariantScreen> {
                   color: const Color(0xFF7AE582),
                   margin: const EdgeInsets.only(right: 10),
                 ),
-                Text(title,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -185,16 +203,21 @@ class _AddVariantScreenState extends State<AddVariantScreen> {
     );
   }
 
-  Widget _buildLabeledTextField(String label, TextEditingController controller,
-      {int minLines = 1,
-      int? maxLines = 1,
-      TextInputType keyboardType = TextInputType.text,
-      bool isPrice = false}) {
+  Widget _buildLabeledTextField(
+    String label,
+    TextEditingController controller, {
+    int minLines = 1,
+    int? maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+    bool isPrice = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
         const SizedBox(height: 5),
         Container(
           decoration: BoxDecoration(
@@ -208,27 +231,38 @@ class _AddVariantScreenState extends State<AddVariantScreen> {
             minLines: minLines,
             maxLines: maxLines,
             decoration: const InputDecoration(
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
               border: InputBorder.none,
             ),
-            onChanged: isPrice
-                ? (value) {
-                    String cleanValue = value.replaceAll(RegExp(r'[^\d]'), '');
-                    if (cleanValue.isNotEmpty) {
-                      final formatter = NumberFormat("#,###", "vi_VN");
-                      String formattedValue =
-                          formatter.format(int.parse(cleanValue));
-                      controller.value = TextEditingValue(
-                        text: "$formattedValue VNĐ",
-                        selection: TextSelection.collapsed(
-                            offset: formattedValue.length + 4),
+            onChanged:
+                isPrice
+                    ? (value) {
+                      String cleanValue = value.replaceAll(
+                        RegExp(r'[^\d]'),
+                        '',
                       );
+                      if (cleanValue.isNotEmpty) {
+                        final formatter = NumberFormat("#,###", "vi_VN");
+                        String formattedValue = formatter.format(
+                          int.parse(cleanValue),
+                        );
+                        controller.value = TextEditingValue(
+                          text: "$formattedValue VNĐ",
+                          selection: TextSelection.collapsed(
+                            offset: formattedValue.length + 4,
+                          ),
+                        );
+                      }
                     }
-                  }
-                : null,
-            validator: (value) =>
-                value == null || value.isEmpty ? "Vui lòng nhập $label" : null,
+                    : null,
+            validator:
+                (value) =>
+                    value == null || value.isEmpty
+                        ? "Vui lòng nhập $label"
+                        : null,
           ),
         ),
         const SizedBox(height: 10),
@@ -256,7 +290,10 @@ class _AddVariantScreenState extends State<AddVariantScreen> {
                 height: 80,
                 decoration: BoxDecoration(
                   border: Border.all(
-                      color: Colors.grey, style: BorderStyle.solid, width: 1.5),
+                    color: Colors.grey,
+                    style: BorderStyle.solid,
+                    width: 1.5,
+                  ),
                   borderRadius: BorderRadius.circular(10),
                   color: Colors.grey[100],
                 ),
@@ -265,32 +302,37 @@ class _AddVariantScreenState extends State<AddVariantScreen> {
                 ),
               ),
             ),
-            ..._selectedImages.map((file) => Stack(
-                  alignment: Alignment.topRight,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.file(
-                        file,
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.cover,
+            ..._selectedImages.map(
+              (file) => Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(
+                      file,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => _removeImage(file),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.red,
+                      ),
+                      padding: const EdgeInsets.all(4),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 18,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () => _removeImage(file),
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.red,
-                        ),
-                        padding: const EdgeInsets.all(4),
-                        child: const Icon(Icons.close,
-                            color: Colors.white, size: 18),
-                      ),
-                    ),
-                  ],
-                )),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ],

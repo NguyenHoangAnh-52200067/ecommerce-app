@@ -95,8 +95,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               ),
                               child: Image.network(
                                 widget.product.images.first,
-                                width: 150,
-                                height: 150,
+                                width: 140,
+                                height: 140,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   return const Icon(
@@ -617,13 +617,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       );
     }
 
-    File imageFile = File(imagePath);
+    // File imageFile = File(imagePath);
 
-    if (!imageFile.existsSync()) {
-      return const Icon(Icons.broken_image, size: 80, color: Colors.red);
-    }
+    // if (!imageFile.existsSync()) {
+    //   return const Icon(Icons.broken_image, size: 80, color: Colors.red);
+    // }
 
-    return Image.file(imageFile, width: 80, height: 80, fit: BoxFit.cover);
+    // return Image.file(imageFile, width: 80, height: 80, fit: BoxFit.cover);
+    return Image.network(imagePath, width: 80, height: 80, fit: BoxFit.cover);
   }
 
   Widget _buildProductImages(
@@ -733,8 +734,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             if (variant.images.isNotEmpty)
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
-                child: Image.file(
-                  File(variant.images[0]),
+                child: Image.network(
+                  variant.images[0],
                   width: 16,
                   height: 16,
                   fit: BoxFit.cover,

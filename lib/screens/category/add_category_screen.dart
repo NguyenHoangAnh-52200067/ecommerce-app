@@ -1,5 +1,6 @@
 import 'package:ecomerce_app/models/category_model.dart';
 import 'package:ecomerce_app/repository/category_repository.dart';
+import 'package:ecomerce_app/utils/image_upload.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
@@ -16,9 +17,12 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final CategoryRepository _categoryRepo = CategoryRepository();
+  final ImageUploadService _imageUploadService =
+      ImageUploadService.getInstance();
   File? _imageFile;
   bool isEditing = false;
-
+  String? _imageUrl;
+  List<String> _images = [];
   @override
   void initState() {
     super.initState();
@@ -28,26 +32,34 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
       if (widget.category!.imageUrl != null &&
           widget.category!.imageUrl!.isNotEmpty) {
         _imageFile = File(widget.category!.imageUrl!);
+        _imageUrl = widget.category!.imageUrl;
       }
     }
   }
 
   Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(
+    final XFile? pickedFile = await ImagePicker().pickImage(
       source: ImageSource.gallery,
     );
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
+
+    if (pickedFile == null) return;
+
+    List<File> newImages = [File(pickedFile.path)];
+    for (var image in newImages) {
+      String? uploadedUrl = await _imageUploadService.uploadImage(image);
+      _images.add(uploadedUrl);
+      _imageUrl = uploadedUrl;
     }
+    setState(() {
+      _imageFile = newImages.first;
+    });
   }
 
   void _addCategory() async {
     if (_formKey.currentState!.validate()) {
       final category = CategoryModel(
         name: _nameController.text.trim(),
-        imageUrl: _imageFile?.path,
+        imageUrl: _images.first,
       );
 
       await _categoryRepo.addCategory(context, category);
@@ -59,8 +71,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
     if (_formKey.currentState!.validate()) {
       final updatedCategory = widget.category!.copyWith(
         name: _nameController.text.trim(),
-        imageUrl:
-            _imageFile != null ? _imageFile!.path : widget.category!.imageUrl,
+        imageUrl: _imageUrl,
       );
 
       await _categoryRepo.updateCategory(context, updatedCategory);
@@ -230,8 +241,8 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                             ],
                           ),
                         )
-                        : Image.file(
-                          _imageFile!,
+                        : Image.network(
+                          _imageUrl!,
                           width: 150,
                           height: 150,
                           fit: BoxFit.cover,

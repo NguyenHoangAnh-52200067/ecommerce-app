@@ -33,8 +33,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
   }
 
   Future<void> _loadProducts() async {
-    final products =
-        await _productRepo.getProductsByCategory(widget.categoryId);
+    final products = await _productRepo.getProductsByCategory(
+      widget.categoryId,
+    );
     setState(() {
       _products = products;
     });
@@ -61,26 +62,29 @@ class _ProductListScreenState extends State<ProductListScreen> {
   void _deleteProduct(ProductModel product) async {
     bool? confirmDelete = await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Xác nhận xóa"),
-        content: Text("Bạn có chắc muốn xóa '${product.productName}' không?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Hủy"),
+      builder:
+          (context) => AlertDialog(
+            title: const Text("Xác nhận xóa"),
+            content: Text(
+              "Bạn có chắc muốn xóa '${product.productName}' không?",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Hủy"),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context, true);
+                  await _productRepo.deleteProduct(product.id!);
+                  setState(() {
+                    _products.removeWhere((p) => p.id == product.id);
+                  });
+                },
+                child: const Text("Xóa", style: TextStyle(color: Colors.red)),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context, true);
-              await _productRepo.deleteProduct(product.id!);
-              setState(() {
-                _products.removeWhere((p) => p.id == product.id);
-              });
-            },
-            child: const Text("Xóa", style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
   }
 
@@ -91,89 +95,93 @@ class _ProductListScreenState extends State<ProductListScreen> {
         title: Text("Sản phẩm - ${widget.categoryName}"),
         backgroundColor: const Color(0xFF7AE582),
       ),
-      body: _products.isEmpty
-          ? const Center(child: Text("Không có sản phẩm nào"))
-          : ListView.builder(
-              itemCount: _products.length,
-              itemBuilder: (context, index) {
-                final product = _products[index];
+      body:
+          _products.isEmpty
+              ? const Center(child: Text("Không có sản phẩm nào"))
+              : ListView.builder(
+                itemCount: _products.length,
+                itemBuilder: (context, index) {
+                  final product = _products[index];
 
-                return Slidable(
-                  key: Key(product.id ?? ""),
-                  endActionPane: ActionPane(
-                    motion: const ScrollMotion(),
-                    extentRatio: 0.3,
-                    children: [
-                      SlidableAction(
-                        onPressed: (context) => _editProduct(product),
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
-                        icon: Icons.edit,
-                        label: 'Sửa',
-                      ),
-                      SlidableAction(
-                        onPressed: (context) => _deleteProduct(product),
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        icon: Icons.delete,
-                        label: 'Xóa',
-                      ),
-                    ],
-                  ),
-                  child: ListTile(
-                    leading: SizedBox(
-                      width: 50,
-                      height: 50,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(5),
-                        child: _buildImage(product.images.isNotEmpty
-                            ? product.images[0]
-                            : null),
-                      ),
-                    ),
-                    title: Text(
-                      product.productName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    subtitle: Text(
-                      Utils.formatCurrency(product.price),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.red,
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              ProductDetailScreen(product: product),
+                  return Slidable(
+                    key: Key(product.id ?? ""),
+                    endActionPane: ActionPane(
+                      motion: const ScrollMotion(),
+                      extentRatio: 0.3,
+                      children: [
+                        SlidableAction(
+                          onPressed: (context) => _editProduct(product),
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          icon: Icons.edit,
+                          label: 'Sửa',
                         ),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
+                        SlidableAction(
+                          onPressed: (context) => _deleteProduct(product),
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          icon: Icons.delete,
+                          label: 'Xóa',
+                        ),
+                      ],
+                    ),
+                    child: ListTile(
+                      leading: SizedBox(
+                        width: 50,
+                        height: 50,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(5),
+                          child: _buildImage(
+                            product.images.isNotEmpty
+                                ? product.images[0]
+                                : null,
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        product.productName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(
+                        Utils.formatCurrency(product.price),
+                        style: const TextStyle(fontSize: 14, color: Colors.red),
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    ProductDetailScreen(product: product),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
     );
   }
 
   Widget _buildImage(String? imagePath) {
     if (imagePath == null || imagePath.isEmpty) {
-      return const Icon(Icons.image_not_supported,
-          size: 80, color: Colors.grey);
+      return const Icon(
+        Icons.image_not_supported,
+        size: 80,
+        color: Colors.grey,
+      );
     }
-
-    if (imagePath.startsWith('/')) {
-      return Image.file(File(imagePath),
-          width: 80, height: 80, fit: BoxFit.cover);
-    } else {
-      return Image.network(imagePath, width: 80, height: 80, fit: BoxFit.cover);
-    }
+    return Image.network(imagePath, width: 80, height: 80, fit: BoxFit.cover);
+    // if (imagePath.startsWith('/')) {
+    //   return Image.file(File(imagePath),
+    //       width: 80, height: 80, fit: BoxFit.cover);
+    // } else {
+    //   return Image.network(imagePath, width: 80, height: 80, fit: BoxFit.cover);
+    // }
   }
 }

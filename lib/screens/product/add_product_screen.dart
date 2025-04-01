@@ -3,6 +3,7 @@ import 'package:ecomerce_app/models/category_model.dart';
 import 'package:ecomerce_app/models/product_model.dart';
 import 'package:ecomerce_app/repository/category_repository.dart';
 import 'package:ecomerce_app/repository/product_repository.dart';
+import 'package:ecomerce_app/utils/image_upload.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -22,12 +23,14 @@ class _AddProductScreenState extends State<AddProductScreen> {
   TextEditingController _discountController = TextEditingController();
   final ProductRepository _productRepo = ProductRepository();
   final CategoryRepository _categoryRepo = CategoryRepository();
-
+  final ImageUploadService _imageUploadService =
+      ImageUploadService.getInstance();
   String? _selectedCategory;
   List<CategoryModel> _categories = [];
   List<File> _selectedImages = [];
   bool _showDiscountInput = false;
-
+  List<String> _images = [];
+  List<String> _listImg = [];
   @override
   void initState() {
     super.initState();
@@ -43,13 +46,20 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
   Future<void> _pickImages() async {
     final List<XFile>? pickedFiles = await ImagePicker().pickMultiImage();
-    if (pickedFiles != null && pickedFiles.isNotEmpty) {
-      List<File> newImages =
-          pickedFiles.map((pickedFile) => File(pickedFile.path)).toList();
-      setState(() {
-        _selectedImages.addAll(newImages);
-      });
-    }
+
+    if (pickedFiles == null) return;
+
+    List<File> newImages =
+        pickedFiles.map((pickedFile) => File(pickedFile.path)).toList();
+    _listImg = await Future.wait(
+      newImages.map(
+        (image) async => await _imageUploadService.uploadImage(image),
+      ),
+    );
+    setState(() {
+      _selectedImages.addAll(newImages);
+      _images = _listImg;
+    });
   }
 
   void _submitProduct(BuildContext context) async {
@@ -105,7 +115,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
         categoryId: _selectedCategory!,
         stock: int.parse(_stockController.text.trim()),
         discount: discount,
-        images: _selectedImages.map((file) => file.path).toList(),
+        images: _images,
       );
 
       await _productRepo.addProduct(product);
@@ -271,7 +281,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
           ),
           child: TextFormField(
             controller: controller,
-            keyboardType: isDescription ? TextInputType.multiline : keyboardType,
+            keyboardType:
+                isDescription ? TextInputType.multiline : keyboardType,
             textInputAction: TextInputAction.newline,
             minLines: minLines,
             maxLines: maxLines,

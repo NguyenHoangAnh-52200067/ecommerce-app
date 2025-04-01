@@ -3,6 +3,7 @@ import 'package:ecomerce_app/models/category_model.dart';
 import 'package:ecomerce_app/models/product_model.dart';
 import 'package:ecomerce_app/repository/category_repository.dart';
 import 'package:ecomerce_app/repository/product_repository.dart';
+import 'package:ecomerce_app/utils/image_upload.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -28,11 +29,13 @@ class _EditProductScreenState extends State<EditProductScreen> {
   final _discountController = TextEditingController();
   final _productRepo = ProductRepository();
   final _categoryRepo = CategoryRepository();
-
+  final ImageUploadService _imageUploadService =
+      ImageUploadService.getInstance();
   String? _selectedCategory;
   List<CategoryModel> _categories = [];
   List<File> _selectedImages = [];
   bool _showDiscountInput = false;
+  List<String> _images = [];
 
   @override
   void initState() {
@@ -67,6 +70,10 @@ class _EditProductScreenState extends State<EditProductScreen> {
     if (pickedFiles != null && pickedFiles.isNotEmpty) {
       List<File> newImages =
           pickedFiles.map((pickedFile) => File(pickedFile.path)).toList();
+      newImages.forEach((image) async {
+        String uploadedUrl = await _imageUploadService.uploadImage(image);
+        _images.add(uploadedUrl);
+      });
       setState(() {
         _selectedImages.addAll(newImages);
       });
@@ -134,14 +141,24 @@ class _EditProductScreenState extends State<EditProductScreen> {
               _buildCard("Tên sản phẩm & Mô tả", [
                 _buildLabeledTextField("Tên sản phẩm", _nameController),
                 _buildLabeledTextField("Thương hiệu", _brandController),
-                _buildLabeledTextField("Mô tả sản phẩm", _descriptionController,
-                    minLines: 5, maxLines: null),
+                _buildLabeledTextField(
+                  "Mô tả sản phẩm",
+                  _descriptionController,
+                  minLines: 5,
+                  maxLines: null,
+                ),
               ]),
               _buildCard("Giá & Số lượng", [
-                _buildLabeledTextField("Giá sản phẩm", _priceController,
-                    keyboardType: TextInputType.number),
-                _buildLabeledTextField("Số lượng trong kho", _stockController,
-                    keyboardType: TextInputType.number),
+                _buildLabeledTextField(
+                  "Giá sản phẩm",
+                  _priceController,
+                  keyboardType: TextInputType.number,
+                ),
+                _buildLabeledTextField(
+                  "Số lượng trong kho",
+                  _stockController,
+                  keyboardType: TextInputType.number,
+                ),
               ]),
               _buildCard("Danh mục", [_buildCategoryDropdown()]),
               _buildCard("Giảm giá", [
@@ -158,12 +175,17 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: const Text("Áp dụng giảm giá",
-                        style: TextStyle(color: Colors.white)),
+                    child: const Text(
+                      "Áp dụng giảm giá",
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 if (_showDiscountInput)
-                  _buildLabeledTextField("Giảm giá (%)", _discountController,
-                      keyboardType: TextInputType.number),
+                  _buildLabeledTextField(
+                    "Giảm giá (%)",
+                    _discountController,
+                    keyboardType: TextInputType.number,
+                  ),
               ]),
               _buildCard("Hình ảnh", [_buildImagePicker()]),
               const SizedBox(height: 20),
@@ -175,10 +197,13 @@ class _EditProductScreenState extends State<EditProductScreen> {
                     backgroundColor: const Color(0xFF7AE582),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                  child: const Text("Cập nhật sản phẩm",
-                      style: TextStyle(fontSize: 16, color: Colors.white)),
+                  child: const Text(
+                    "Cập nhật sản phẩm",
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
                 ),
               ),
             ],
@@ -207,9 +232,13 @@ class _EditProductScreenState extends State<EditProductScreen> {
                   color: const Color(0xFF7AE582),
                   margin: const EdgeInsets.only(right: 10),
                 ),
-                Text(title,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -220,17 +249,22 @@ class _EditProductScreenState extends State<EditProductScreen> {
     );
   }
 
-  Widget _buildLabeledTextField(String label, TextEditingController controller,
-      {int minLines = 1,
-      int? maxLines = 1,
-      TextInputType keyboardType = TextInputType.text,
-      bool isPrice = false,
-      bool isDiscount = false}) {
+  Widget _buildLabeledTextField(
+    String label,
+    TextEditingController controller, {
+    int minLines = 1,
+    int? maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+    bool isPrice = false,
+    bool isDiscount = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
         const SizedBox(height: 5),
         Container(
           decoration: BoxDecoration(
@@ -244,8 +278,10 @@ class _EditProductScreenState extends State<EditProductScreen> {
             minLines: minLines,
             maxLines: maxLines,
             decoration: const InputDecoration(
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
               border: InputBorder.none,
             ),
             onChanged: (value) {
@@ -262,12 +298,14 @@ class _EditProductScreenState extends State<EditProductScreen> {
                 String cleanValue = value.replaceAll(RegExp(r'[^\d]'), '');
                 if (cleanValue.isNotEmpty) {
                   final formatter = NumberFormat("#,###", "vi_VN");
-                  String formattedValue =
-                      formatter.format(int.parse(cleanValue));
+                  String formattedValue = formatter.format(
+                    int.parse(cleanValue),
+                  );
                   controller.value = TextEditingValue(
                     text: "$formattedValue VNĐ",
                     selection: TextSelection.collapsed(
-                        offset: formattedValue.length + 4),
+                      offset: formattedValue.length + 4,
+                    ),
                   );
                 }
               }
@@ -295,12 +333,15 @@ class _EditProductScreenState extends State<EditProductScreen> {
     return DropdownButtonFormField<String>(
       value: _selectedCategory,
       isExpanded: true,
-      items: _categories
-          .map((category) => DropdownMenuItem(
-                value: category.id,
-                child: Text(category.name),
-              ))
-          .toList(),
+      items:
+          _categories
+              .map(
+                (category) => DropdownMenuItem(
+                  value: category.id,
+                  child: Text(category.name),
+                ),
+              )
+              .toList(),
       onChanged: (value) {
         setState(() {
           _selectedCategory = value;
@@ -331,7 +372,10 @@ class _EditProductScreenState extends State<EditProductScreen> {
                 height: 80,
                 decoration: BoxDecoration(
                   border: Border.all(
-                      color: Colors.grey, style: BorderStyle.solid, width: 1.5),
+                    color: Colors.grey,
+                    style: BorderStyle.solid,
+                    width: 1.5,
+                  ),
                   borderRadius: BorderRadius.circular(10),
                   color: Colors.grey[100],
                 ),
@@ -340,32 +384,37 @@ class _EditProductScreenState extends State<EditProductScreen> {
                 ),
               ),
             ),
-            ..._selectedImages.map((file) => Stack(
-                  alignment: Alignment.topRight,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.file(
-                        file,
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.cover,
+            ..._selectedImages.map(
+              (file) => Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(
+                      file,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => _removeImage(file),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.red,
+                      ),
+                      padding: const EdgeInsets.all(4),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 18,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () => _removeImage(file),
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.red,
-                        ),
-                        padding: const EdgeInsets.all(4),
-                        child: const Icon(Icons.close,
-                            color: Colors.white, size: 18),
-                      ),
-                    ),
-                  ],
-                )),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ],
