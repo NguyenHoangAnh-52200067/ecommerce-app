@@ -1,4 +1,5 @@
 import 'package:ecomerce_app/screens/widgets/button_input/custom_button.dart';
+import 'package:ecomerce_app/screens/widgets/form/address_fill.dart';
 import 'package:flutter/material.dart';
 // SCREEN
 import 'package:ecomerce_app/screens/auth/login_screen.dart';
@@ -175,14 +176,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             const Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   'HA SHOP',
                                   style: TextStyle(
                                     fontSize: 50,
                                     fontWeight: FontWeight.w400,
                                   ),
                                 ),
-                                const Text(
+                                Text(
                                   'Tạo tài khoản để mua sắm',
                                   style: TextStyle(
                                     fontSize: 16,
@@ -228,7 +229,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   return null;
                                 },
                               ),
-                              AddressForm(onAddressChanged: _onAddressChanged),
+
+                              //fix for a problem
+                              //AddressForm(onAddressChanged: _onAddressChanged),
+                              AddressSearchField(),
+                              //fix for a problem
                               InputField(
                                 controller: _passwordController,
                                 focusNode: _password,

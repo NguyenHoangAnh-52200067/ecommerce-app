@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:ecomerce_app/models/user_model.dart';
 import 'package:ecomerce_app/repository/user_repository.dart';
 import 'package:ecomerce_app/screens/auth/login_screen.dart';
+import 'package:ecomerce_app/utils/image_upload.dart';
 import 'package:ecomerce_app/utils/image_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -24,6 +25,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   final _oldPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmNewPasswordController = TextEditingController();
+  final _imageUploadService = ImageUploadService.getInstance();
 
   bool _isOldPasswordObscure = true;
   bool _isNewPasswordObscure = true;
@@ -35,7 +37,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   bool _isEditing = false;
   bool _isLoading = false;
   File? _selectedImage;
-
+  String? _imgGender;
   @override
   void initState() {
     super.initState();
@@ -74,13 +76,15 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     if (pickedFile == null) return;
 
     File newImage = File(pickedFile.path);
+    _imgGender = await _imageUploadService.uploadImage(newImage);
 
     setState(() {
       _selectedImage = newImage;
-      _linkImage = pickedFile.path;
+      _linkImage = _imgGender;
     });
-
-    await _updateUserImage(pickedFile.path);
+    if (_imgGender != null) {
+      await _updateUserImage(_imgGender!);
+    }
   }
 
   Future<void> _updateUserImage(String imagePath) async {

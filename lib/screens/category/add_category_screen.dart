@@ -33,8 +33,9 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
   }
 
   Future<void> _pickImage() async {
-    final pickedFile =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
+    final pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+    );
     if (pickedFile != null) {
       setState(() {
         _imageFile = File(pickedFile.path);
@@ -46,7 +47,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
     if (_formKey.currentState!.validate()) {
       final category = CategoryModel(
         name: _nameController.text.trim(),
-        imageUrl: _imageFile != null ? _imageFile!.path : null,
+        imageUrl: _imageFile?.path,
       );
 
       await _categoryRepo.addCategory(context, category);
@@ -85,9 +86,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
               _buildCard("Tên danh mục", [
                 _buildLabeledTextField("Tên danh mục", _nameController),
               ]),
-              _buildCard("Hình ảnh danh mục", [
-                _buildImagePicker(),
-              ]),
+              _buildCard("Hình ảnh danh mục", [_buildImagePicker()]),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
@@ -132,9 +131,13 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                   color: const Color(0xFF7AE582),
                   margin: const EdgeInsets.only(right: 10),
                 ),
-                Text(title,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -146,12 +149,16 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
   }
 
   Widget _buildLabeledTextField(
-      String label, TextEditingController controller) {
+    String label,
+    TextEditingController controller,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
         const SizedBox(height: 5),
         Container(
           decoration: BoxDecoration(
@@ -162,12 +169,17 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
           child: TextFormField(
             controller: controller,
             decoration: const InputDecoration(
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
               border: InputBorder.none,
             ),
-            validator: (value) =>
-                value == null || value.isEmpty ? "Vui lòng nhập $label" : null,
+            validator:
+                (value) =>
+                    value == null || value.isEmpty
+                        ? "Vui lòng nhập $label"
+                        : null,
           ),
         ),
         const SizedBox(height: 10),
@@ -194,30 +206,36 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                 color: Colors.grey[100],
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
-                  BoxShadow(color: Colors.grey.shade300, blurRadius: 5)
+                  BoxShadow(color: Colors.grey.shade300, blurRadius: 5),
                 ],
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: _imageFile == null
-                    ? const Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.add_a_photo,
-                                size: 50, color: Colors.grey),
-                            SizedBox(height: 5),
-                            Text("Chọn ảnh danh mục",
-                                style: TextStyle(color: Colors.grey)),
-                          ],
+                child:
+                    _imageFile == null
+                        ? const Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.add_a_photo,
+                                size: 50,
+                                color: Colors.grey,
+                              ),
+                              SizedBox(height: 5),
+                              Text(
+                                "Chọn ảnh danh mục",
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        )
+                        : Image.file(
+                          _imageFile!,
+                          width: 150,
+                          height: 150,
+                          fit: BoxFit.cover,
                         ),
-                      )
-                    : Image.file(
-                        _imageFile!,
-                        width: 150,
-                        height: 150,
-                        fit: BoxFit.cover,
-                      ),
               ),
             ),
           ),

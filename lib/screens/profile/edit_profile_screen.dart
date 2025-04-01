@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:ecomerce_app/models/user_model.dart';
 import 'package:ecomerce_app/repository/user_repository.dart';
 import 'package:ecomerce_app/screens/auth/login_screen.dart';
+import 'package:ecomerce_app/utils/image_upload.dart';
 import 'package:ecomerce_app/utils/image_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -18,7 +19,8 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final User? user = FirebaseAuth.instance.currentUser;
   final UserRepository _userRepo = UserRepository();
-
+  final ImageUploadService _imageUploadService =
+      ImageUploadService.getInstance();
   final _fullNameController = TextEditingController();
   final _addressController = TextEditingController();
 
@@ -27,6 +29,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _isEditing = false;
   bool _isLoading = false;
   File? _selectedImage;
+  String? _imgGender;
 
   @override
   void initState() {
@@ -66,13 +69,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (pickedFile == null) return;
 
     File newImage = File(pickedFile.path);
+    _imgGender = await _imageUploadService.uploadImage(newImage);
 
     setState(() {
       _selectedImage = newImage;
-      _linkImage = pickedFile.path;
+      _linkImage = _imgGender;
     });
-
-    await _updateUserImage(pickedFile.path);
+    if (_imgGender != null) {
+      await _updateUserImage(_imgGender!);
+    }
   }
 
   Future<void> _updateUserImage(String imagePath) async {
@@ -293,7 +298,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               children: [
                 CircleAvatar(
                   radius: 50,
-                  child: ImageUtils.buildImage(_linkImage),
+                  backgroundImage:
+                      _linkImage != null
+                          ? NetworkImage(_linkImage!)
+                          : const NetworkImage(
+                            'https://via.placeholder.com/150',
+                          ),
                 ),
                 IconButton(
                   onPressed: _pickImage,
