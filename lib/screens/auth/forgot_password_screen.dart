@@ -29,7 +29,7 @@ class _LoginState extends State<ForgotPassword> {
 
         final response = await http.post(
           Uri.parse(
-              "http://127.0.0.1:5001/ecommerce-app-d91e/us-central1/sendOtpEmail"),
+              "http://127.0.0.1:5001/ecommerce-app-d91e7/us-central1/sendOtpEmail"),
           headers: {"Content-Type": "application/json"},
           body: jsonEncode({"email": email}),
         );

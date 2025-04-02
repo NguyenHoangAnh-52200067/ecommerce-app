@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:ecomerce_app/models/user_model.dart';
 import 'package:ecomerce_app/repository/user_repository.dart';
 import 'package:ecomerce_app/screens/auth/login_screen.dart';
-import 'package:ecomerce_app/utils/image_upload.dart';
+import 'package:ecomerce_app/services/address_api_service.dart';
 import 'package:ecomerce_app/utils/image_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -19,17 +19,17 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final User? user = FirebaseAuth.instance.currentUser;
   final UserRepository _userRepo = UserRepository();
-  final ImageUploadService _imageUploadService =
-      ImageUploadService.getInstance();
+  final AddressApiService _addressApiService = AddressApiService();
+
   final _fullNameController = TextEditingController();
   final _addressController = TextEditingController();
 
+  List<String> _addressSug = [];
   String? _email;
   String? _linkImage;
   bool _isEditing = false;
   bool _isLoading = false;
   File? _selectedImage;
-  String? _imgGender;
 
   @override
   void initState() {
@@ -69,15 +69,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (pickedFile == null) return;
 
     File newImage = File(pickedFile.path);
-    _imgGender = await _imageUploadService.uploadImage(newImage);
 
     setState(() {
       _selectedImage = newImage;
-      _linkImage = _imgGender;
+      _linkImage = pickedFile.path;
     });
-    if (_imgGender != null) {
-      await _updateUserImage(_imgGender!);
-    }
+
+    await _updateUserImage(pickedFile.path);
   }
 
   Future<void> _updateUserImage(String imagePath) async {
@@ -102,6 +100,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text('Lỗi cập nhật ảnh: $e')));
     }
+  }
+
+  void _onAddressChanged(String address) {
+    print("DIA CHI NHAP: $address");
+    _addressApiService.deplayedSearchReq(address, (onResult) {
+      setState(() {
+        _addressController.text = address;
+        _addressSug = onResult;
+      });
+      print("Dia chi goi y: $onResult");
+    });
   }
 
   void _updateUserData() async {
@@ -211,6 +220,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     String label,
     TextEditingController controller, {
     TextInputType keyboardType = TextInputType.text,
+    ValueChanged<String>? onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -234,6 +244,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             style: TextStyle(
               color: _isEditing ? Colors.black : Colors.grey.shade700,
             ),
+            onChanged: onChanged,
             decoration: const InputDecoration(
               contentPadding: EdgeInsets.symmetric(
                 horizontal: 12,
@@ -298,12 +309,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               children: [
                 CircleAvatar(
                   radius: 50,
-                  backgroundImage:
-                      _linkImage != null
-                          ? NetworkImage(_linkImage!)
-                          : const NetworkImage(
-                            'https://via.placeholder.com/150',
-                          ),
+                  child: ImageUtils.buildImage(_linkImage),
                 ),
                 IconButton(
                   onPressed: _pickImage,
@@ -315,7 +321,53 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             _buildCard("Email", [_buildEmailField()]),
             _buildCard("Thông tin cá nhân", [
               _buildLabeledTextField("Họ và tên", _fullNameController),
-              _buildLabeledTextField("Địa chỉ", _addressController),
+              _buildLabeledTextField(
+                "Địa chỉ",
+                _addressController,
+                onChanged: _onAddressChanged,
+              ),
+              if (_addressSug.isNotEmpty)
+                Positioned(
+                  top: 67,
+                  left: 25,
+                  right: 25,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.2),
+                            spreadRadius: 1,
+                            blurRadius: 5,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children:
+                              _addressSug.map((suggestion) {
+                                return Material(
+                                  color: Colors.transparent,
+                                  child: ListTile(
+                                    title: Text(suggestion),
+                                    onTap: () {
+                                      _addressController.text = suggestion;
+                                      setState(() {
+                                        _addressSug = [];
+                                      });
+                                    },
+                                  ),
+                                );
+                              }).toList(),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ]),
             const SizedBox(height: 24),
             _isEditing
