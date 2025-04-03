@@ -1,5 +1,5 @@
-// import 'package:ecomerce_app/services/address_api_service.dart';
-// import 'package:flutter/material.dart';
+import 'package:ecomerce_app/services/address_api_service.dart';
+import 'package:flutter/material.dart';
 
 class AddressSearchField extends StatefulWidget {
   final Function(String) onAddressSelect;
@@ -8,18 +8,18 @@ class AddressSearchField extends StatefulWidget {
   AddressSearchFieldState createState() => AddressSearchFieldState();
 }
 
-// class AddressSearchFieldState extends State<AddressSearchField> {
-//   final AddressApiService apiService = AddressApiService();
-//   final TextEditingController _controller = TextEditingController();
-//   List<dynamic> _suggestions = [];
+class AddressSearchFieldState extends State<AddressSearchField> {
+  final AddressApiService apiService = AddressApiService();
+  final TextEditingController _controller = TextEditingController();
+  List<dynamic> _suggestions = [];
 
-//   void _onSearchChanged(String query) {
-//     apiService.debounceSearch(query, (suggestions) {
-//       setState(() {
-//         _suggestions = suggestions;
-//       });
-//     });
-//   }
+  //   void _onSearchChanged(String query) {
+  //     apiService.debounceSearch(query, (suggestions) {
+  //       setState(() {
+  //         _suggestions = suggestions;
+  //       });
+  //     });
+  //   }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +48,7 @@ class AddressSearchField extends StatefulWidget {
                 prefixIcon: Icon(Icons.location_on),
                 suffixIcon: Icon(Icons.search),
               ),
-              onChanged: _onSearchChanged,
+              // onChanged: _onSearchChanged,
             ),
           ),
           if (_suggestions.isNotEmpty)
