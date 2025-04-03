@@ -1,5 +1,5 @@
 import 'package:ecomerce_app/screens/widgets/button_input/custom_button.dart';
-import 'package:ecomerce_app/screens/widgets/form/address_fill.dart';
+import 'package:ecomerce_app/services/address_api_service.dart';
 import 'package:flutter/material.dart';
 // SCREEN
 import 'package:ecomerce_app/screens/auth/login_screen.dart';
@@ -23,25 +23,33 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   final FirebaseAuthService _auth = FirebaseAuthService();
   final UserRepository _userRepo = UserRepository();
+  final AddressApiService _addressApiService = AddressApiService();
 
   final _emailController = TextEditingController();
   final _fullNameController = TextEditingController();
   final _addressController = TextEditingController();
   final _passwordController = TextEditingController();
   final cfpasswordController = TextEditingController();
+  List<String> _addressSug = [];
+
   final _formKey = GlobalKey<FormState>();
-  bool _obscureTextPassword = true;
-  bool _obscureTextCFPassword = true;
-  bool _isSigningUp = false;
   final FocusNode _email = FocusNode();
   final FocusNode _password = FocusNode();
   final FocusNode _cfpassword = FocusNode();
 
+  bool _obscureTextPassword = true;
+  bool _obscureTextCFPassword = true;
+  bool _isSigningUp = false;
+
   void _onAddressChanged(String address) {
-    setState(() {
-      _addressController.text = address;
+    print("DIA CHI NHAP: $address");
+    _addressApiService.deplayedSearchReq(address, (onResult) {
+      setState(() {
+        _addressController.text = address;
+        _addressSug = onResult;
+      });
+      print("Dia chi goi y: $onResult");
     });
-    print("Địa chỉ đã chọn: $_addressController");
   }
 
   void _signUpScreen() async {
@@ -115,12 +123,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         const SizedBox(width: 10),
                         ElevatedButton(
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const LoginScreen(),
-                              ),
-                            );
+                            Navigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF7AE582),
@@ -143,7 +146,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   alignment: Alignment.bottomCenter,
                   child: Container(
                     width: width,
-                    height: height / 1.06,
+                    height: height / 1.25,
                     decoration: const BoxDecoration(
                       color: Color(0xFF7AE582),
                       borderRadius: BorderRadius.only(
@@ -176,14 +179,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             const Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
+                                const Text(
                                   'HA SHOP',
                                   style: TextStyle(
                                     fontSize: 50,
                                     fontWeight: FontWeight.w400,
                                   ),
                                 ),
-                                Text(
+                                const Text(
                                   'Tạo tài khoản để mua sắm',
                                   style: TextStyle(
                                     fontSize: 16,
@@ -229,11 +232,56 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   return null;
                                 },
                               ),
+                              InputField(
+                                controller: _addressController,
+                                hintText: 'Địa chỉ',
+                                icon: Icons.map,
+                                onChanged: _onAddressChanged,
+                              ),
+                              if (_addressSug.isNotEmpty)
+                                Positioned(
+                                  top: 67,
+                                  left: 25,
+                                  right: 25,
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(8),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.grey.withOpacity(0.2),
+                                            spreadRadius: 1,
+                                            blurRadius: 5,
+                                            offset: Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: SingleChildScrollView(
+                                        child: Column(
+                                          children:
+                                              _addressSug.map((suggestion) {
+                                                return Material(
+                                                  color: Colors.transparent,
+                                                  child: ListTile(
+                                                    title: Text(suggestion),
+                                                    onTap: () {
+                                                      _addressController.text =
+                                                          suggestion;
+                                                      setState(() {
+                                                        _addressSug = [];
+                                                      });
+                                                    },
+                                                  ),
+                                                );
+                                              }).toList(),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
 
-                              //fix for a problem
-                              //AddressForm(onAddressChanged: _onAddressChanged),
-                              //AddressSearchField(),
-                              //fix for a problem
                               InputField(
                                 controller: _passwordController,
                                 focusNode: _password,

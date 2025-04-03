@@ -14,8 +14,6 @@ class InputField extends StatelessWidget {
   final Function(String)? onChanged;
   final bool readOnly;
 
-
-
   InputField({
     required this.controller,
     this.focusNode,
@@ -57,6 +55,11 @@ class InputField extends StatelessWidget {
           prefixIcon: Icon(icon),
           suffixIcon: suffixIcon,
         ),
+        onChanged: (value) {
+          if (onChanged != null) {
+            onChanged!(value);
+          }
+        },
         validator: validator,
       ),
     );
