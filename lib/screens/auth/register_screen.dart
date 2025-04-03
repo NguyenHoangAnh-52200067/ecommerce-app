@@ -232,7 +232,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                               //fix for a problem
                               //AddressForm(onAddressChanged: _onAddressChanged),
-                              AddressSearchField(),
+                              //AddressSearchField(),
                               //fix for a problem
                               InputField(
                                 controller: _passwordController,

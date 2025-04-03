@@ -11,7 +11,9 @@ class ProductRepository extends GetxController {
   // Thêm sản phẩm
   Future<void> addProduct(ProductModel product) async {
     try {
+      product.id = _db.collection("products").doc().id; // Tạo và gán ID tự động
       await _db.collection("products").doc(product.id).set(product.toJson());
+      //await _db.collection("products").doc(product.id).set(product.toJson());
       Get.snackbar(
         "Thành công",
         "Thêm sản phẩm thành công",
@@ -37,7 +39,7 @@ class ProductRepository extends GetxController {
       }
 
       await _db.collection("products").doc(id).delete();
-      
+
       Get.snackbar(
         "Xóa thành công",
         "Sản phẩm đã được xóa",
@@ -67,7 +69,7 @@ class ProductRepository extends GetxController {
 
       Map<String, dynamic> oldData = docSnapshot.data() as Map<String, dynamic>;
       Map<String, dynamic> updatedData = product.toJson();
-      
+
       if (updatedData["parentId"] == null && oldData.containsKey("parentId")) {
         updatedData["parentId"] = oldData["parentId"];
       }

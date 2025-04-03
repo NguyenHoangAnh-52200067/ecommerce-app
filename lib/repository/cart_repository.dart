@@ -47,6 +47,7 @@ class CartRepository extends GetxController {
         await cartRef.set({
           'userId': cart.userId,
           'items': [newItem.toMap()],
+          'cartId': _db.collection('carts').doc().id,
         });
       }
     } catch (e) {
@@ -166,12 +167,16 @@ class CartRepository extends GetxController {
 
       final cartDoc = await _db.collection('carts').doc(userId).get();
 
-      if (cartDoc.exists) {
+      if (cartDoc.exists && cartDoc.data() != null) {
         return Cart.fromMap(cartDoc.data()!);
       }
 
       // Tạo giỏ hàng mới nếu chưa tồn tại
-      final newCart = Cart(userId: userId);
+      final newCart = Cart(
+        userId: userId,
+        cartId: _db.collection('carts').doc().id, // Tạo ID riêng cho cart
+        items: [],
+      );
       await saveCart(newCart);
       return newCart;
     } catch (e) {

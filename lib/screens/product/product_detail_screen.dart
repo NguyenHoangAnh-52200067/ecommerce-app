@@ -1,14 +1,15 @@
-import 'dart:io';
 import 'package:ecomerce_app/models/cartitems_model.dart';
 import 'package:ecomerce_app/models/product_model.dart';
 import 'package:ecomerce_app/repository/cart_repository.dart';
 import 'package:ecomerce_app/repository/product_repository.dart';
+import 'package:ecomerce_app/repository/user_repository.dart';
 import 'package:ecomerce_app/screens/product/variant/add_variant_screen.dart';
 import 'package:ecomerce_app/utils/image_utils.dart';
 import 'package:ecomerce_app/utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final ProductModel product;
@@ -26,6 +27,8 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final ProductRepository _productRepo = ProductRepository();
+  final uuid = Uuid();
+  final UserRepository _userRepo = UserRepository();
   late List<ProductModel> variants = [];
   bool isLoading = true;
   int _currentImageIndex = 0;
@@ -33,6 +36,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String? selectedOption;
   int quantity = 1;
   bool isBuyNow = false;
+
   @override
   void initState() {
     super.initState();
@@ -216,7 +220,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ],
                 ),
-
                 Container(
                   height: 0.3,
                   color: Colors.grey,
@@ -269,11 +272,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     onPressed: () async {
                       final cartRepo = CartRepository();
                       final cart = await cartRepo.getCart(
-                        'userId',
-                      ); // TODO: Replace with actual userId
-
+                        _userRepo.getCurrentUserId()!,
+                      );
                       final cartItem = CartItem(
-                        id: DateTime.now().toString(), // Generate unique ID
+                        id: uuid.v4(), // Generate unique ID
                         productId: widget.product.id!, // Add null check with !
                         productName: widget.product.productName,
                         variantName: selectedOption,
@@ -285,14 +287,40 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         quantity: quantity,
                         discountRate: widget.product.discount,
                       );
-
                       await cartRepo.addItem(cart, cartItem);
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Đã thêm vào giỏ hàng')),
+                      setState(() {
+                        quantity = 1;
+                      });
+                      if (!mounted) return;
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (BuildContext context) {
+                          Future.delayed(Duration(seconds: 2), () {
+                            Navigator.of(context).pop();
+                          });
+                          return AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.check_circle,
+                                  color: Colors.green,
+                                  size: 50,
+                                ),
+                                SizedBox(height: 16),
+                                Text(
+                                  'Đã thêm vào giỏ hàng',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                       );
-
-                      Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
@@ -312,6 +340,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       print("Mua ngay: ${selectedOption ?? ''} x$quantity");
                       print("Số lượng biến thể: ${variants.length}");
                       Navigator.pop(context);
+                      // chuyển đến trang thanh toán
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
@@ -616,7 +645,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         color: Colors.grey,
       );
     }
-
     // File imageFile = File(imagePath);
 
     // if (!imageFile.existsSync()) {

@@ -2,7 +2,8 @@ import 'package:ecomerce_app/services/address_api_service.dart';
 import 'package:flutter/material.dart';
 
 class AddressSearchField extends StatefulWidget {
-  const AddressSearchField({super.key});
+  final Function(String) onAddressSelect;
+  AddressSearchField({super.key, required this.onAddressSelect});
   @override
   AddressSearchFieldState createState() => AddressSearchFieldState();
 }
@@ -23,21 +24,22 @@ class AddressSearchFieldState extends State<AddressSearchField> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(8),
       child: Column(
         children: [
           Container(
-            width: 360,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(8),
-              boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
+              border: Border.all(
+                color: const Color.fromARGB(255, 53, 53, 53),
+                width: 1,
+              ),
             ),
             child: TextField(
               controller: _controller,
               keyboardType: TextInputType.text,
               decoration: InputDecoration(
-                hintText: 'Số nhà + Tên đường',
+                hintText: 'Nhập địa chỉ của bạn',
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.symmetric(
                   horizontal: 10,
@@ -66,6 +68,11 @@ class AddressSearchFieldState extends State<AddressSearchField> {
                           title: Text(suggestion['description']),
                           onTap: () {
                             _controller.text = suggestion['description'];
+                            // Add a print statement or use a callback to handle the selected value
+                            print(
+                              'Selected address: ${suggestion['description']}',
+                            );
+                            widget.onAddressSelect(suggestion['description']);
                             setState(() {
                               _suggestions = [];
                             });

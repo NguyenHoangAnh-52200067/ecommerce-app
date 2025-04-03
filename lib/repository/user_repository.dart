@@ -9,6 +9,12 @@ class UserRepository extends GetxController {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  String? getCurrentUserId() {
+    User? user = FirebaseAuth.instance.currentUser;
+    return user?.uid ??
+        "noLogin"; // Nếu đã đăng nhập, trả về UID, nếu chưa thì null
+  }
+
   Future<void> createUser(BuildContext context, UserModel user) async {
     try {
       await _db.collection("users").doc(user.id).set(user.toJson());

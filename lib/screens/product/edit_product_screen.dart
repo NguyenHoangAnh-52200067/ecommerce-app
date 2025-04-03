@@ -36,7 +36,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
   List<File> _selectedImages = [];
   bool _showDiscountInput = false;
   List<String> _images = [];
-
+  List<String> _uploadedImages = [];
   @override
   void initState() {
     super.initState();
@@ -53,6 +53,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
     _discountController.text = widget.product.discount.toString();
     _selectedCategory = widget.product.categoryId;
     _selectedImages = widget.product.images.map((path) => File(path)).toList();
+    _images = widget.product.images.map((url) => url).toList();
+    _uploadedImages = [];
     if (widget.product.discount > 0) {
       _showDiscountInput = true;
     }
@@ -70,12 +72,13 @@ class _EditProductScreenState extends State<EditProductScreen> {
     if (pickedFiles != null && pickedFiles.isNotEmpty) {
       List<File> newImages =
           pickedFiles.map((pickedFile) => File(pickedFile.path)).toList();
-      newImages.forEach((image) async {
+      for (var image in newImages) {
         String uploadedUrl = await _imageUploadService.uploadImage(image);
-        _images.add(uploadedUrl);
-      });
+        _uploadedImages.add(uploadedUrl);
+      }
       setState(() {
         _selectedImages.addAll(newImages);
+        _images.addAll(_uploadedImages);
       });
     }
   }
@@ -112,7 +115,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
         categoryId: _selectedCategory!,
         stock: int.parse(_stockController.text.trim()),
         discount: discount,
-        images: _selectedImages.map((file) => file.path).toList(),
+        images: _images,
       );
 
       await _productRepo.updateProduct(updatedProduct);
@@ -384,21 +387,21 @@ class _EditProductScreenState extends State<EditProductScreen> {
                 ),
               ),
             ),
-            ..._selectedImages.map(
-              (file) => Stack(
+            ..._images.map(
+              (imgUrl) => Stack(
                 alignment: Alignment.topRight,
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.file(
-                      file,
+                    child: Image.network(
+                      imgUrl,
                       width: 80,
                       height: 80,
                       fit: BoxFit.cover,
                     ),
                   ),
                   GestureDetector(
-                    onTap: () => _removeImage(file),
+                    onTap: () => _removeImage(imgUrl),
                     child: Container(
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
@@ -421,9 +424,9 @@ class _EditProductScreenState extends State<EditProductScreen> {
     );
   }
 
-  void _removeImage(File image) {
+  void _removeImage(String image) {
     setState(() {
-      _selectedImages.remove(image);
+      _images.remove(image);
     });
   }
 }
