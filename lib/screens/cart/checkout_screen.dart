@@ -1,4 +1,5 @@
 import 'package:ecomerce_app/models/cartitems_model.dart';
+import 'package:ecomerce_app/screens/cart/address_screen.dart';
 import 'package:ecomerce_app/screens/widgets/form/address_fill.dart';
 import 'package:ecomerce_app/utils/utils.dart';
 import 'package:flutter/material.dart';
@@ -24,11 +25,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     {'name': 'Express', 'selected': false, 'fee': 100000.0},
   ];
   late final List<CartItem> cartItems;
+
   void getAddressSelected(String address) {
     setState(() {
       addressSelected = address;
     });
-    print(" địa chỉ được chọn " + addressSelected);
+    print("Địa chỉ được chọn " + addressSelected);
     ;
   }
 
@@ -46,6 +48,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void initState() {
     super.initState();
     cartItems = widget.cartItems;
+
     selectedShippingMethod = 'Nhanh';
     for (var method in shippingMethods) {
       method['selected'] = method['name'] == 'Standard';
@@ -63,10 +66,87 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       body: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.all(16.0),
-
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AddressScreen()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.all(16),
+                  backgroundColor: Colors.white,
+                  textStyle: TextStyle(color: Colors.black, fontSize: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.location_on,
+                                color: const Color.fromARGB(255, 72, 178, 235),
+                              ),
+                              SizedBox(width: 12),
+                              Text(
+                                "Trần Đỗ Khánh Minh",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              SizedBox(width: 16),
+                              Flexible(
+                                child: Text(
+                                  "(+84) 345 738 256",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    "B134, Đường Số 7, KDC Kim Sơn, Quận 7, TP. HCM ",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black,
+                                    ),
+                                    softWrap: true,
+                                    maxLines: 3,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Icon(Icons.arrow_forward_ios, color: Colors.grey[600]),
+                  ],
+                ),
+              ),
+              SizedBox(height: 20),
               Text(
                 'Sản phẩm:',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),

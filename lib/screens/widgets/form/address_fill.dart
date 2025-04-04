@@ -13,13 +13,13 @@ class AddressSearchFieldState extends State<AddressSearchField> {
   final TextEditingController _controller = TextEditingController();
   List<dynamic> _suggestions = [];
 
-  //   void _onSearchChanged(String query) {
-  //     apiService.debounceSearch(query, (suggestions) {
-  //       setState(() {
-  //         _suggestions = suggestions;
-  //       });
-  //     });
-  //   }
+  void _onSearchChanged(String query) {
+    apiService.debounceSearch(query, (suggestions) {
+      setState(() {
+        _suggestions = suggestions;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +48,7 @@ class AddressSearchFieldState extends State<AddressSearchField> {
                 prefixIcon: Icon(Icons.location_on),
                 suffixIcon: Icon(Icons.search),
               ),
-              // onChanged: _onSearchChanged,
+              onChanged: _onSearchChanged,
             ),
           ),
           if (_suggestions.isNotEmpty)
